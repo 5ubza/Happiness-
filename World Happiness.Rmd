@@ -1,0 +1,73 @@
+---
+title: "World Happiness"
+author: "Ibrahim"
+date: "10/31/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r,include=FALSE}
+
+rp <- c("corrplot", "CCA", "mclust", "maptools", "lavaan", "semPlot", "dplyr", "tidyverse")
+lapply(rp, require, character.only = TRUE)
+
+```
+
+
+# Introduction
+
+
+
+
+
+## Data Setup and Selection 
+
+### Data Import 
+```{r}
+#importing Data
+happy_2019 <- read_csv("2019.csv", col_types = cols(`Freedom to make life choices` = col_number(), 
+    `GDP per capita` = col_number(), Generosity = col_number(), 
+    `Healthy life expectancy` = col_number(), 
+    `Perceptions of corruption` = col_number(), 
+    Score = col_number(), `Social support` = col_number()))
+
+head(happy_2019)
+```
+
+### Data Setup
+```{r}
+#Convert country cloumn into row name
+happy_2019 <- happy_2019[-1]
+happy_2019 <- happy_2019 %>% remove_rownames %>% column_to_rownames(var="Country or region")
+head(happy_2019)
+```
+### Missing Values 
+```{r}
+# Find zeroa values and replace with NA
+missing_happy <- select(happy_2019, 2:7)
+  missing_happy[missing_happy==0]<-NA
+  missing_happy %>% filter_all(any_vars(is.na(.)))
+```
+
+### Mean Replacement
+```{r}
+#replace missing values with the mean of the column 
+  NAmean <- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
+  missing_happy[] <- lapply(missing_happy, NAmean)
+
+
+```
+
+
+## Correlation Matrix 
+```{r}
+corr_happy <- missing_happy[-1]
+corrplot(cor(corr_happy),
+  method = "number",
+  type = "upper" # show only upper side
+)
+
+```
